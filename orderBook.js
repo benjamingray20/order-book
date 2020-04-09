@@ -1,35 +1,43 @@
 
 const reconcileOrder = (existingBook, incomingOrder) => {
   let updatedBook = []
-  let existingOrderBookType = existingBook.map(function (order) { return order.type })
-  let existingOrderBookPrice = existingBook.map(function (order) { return order.price })
-  let existingOrderBookQuantity = existingBook.map(function (order) { return order.quantity })
-
-  if (existingBook.length == 0) {
+  if (existingBook.length === 0 ||
+    existingBook[0].type === incomingOrder.type ||
+    existingBook[0].quantity != incomingOrder.quantity && existingBook[0].price != incomingOrder.price) {
     updatedBook = existingBook.concat(incomingOrder)
-
-  } else if ((existingOrderBookType == incomingOrder.type) && (existingBook.type != 'buy')) {
-    updatedBook = existingBook.concat(incomingOrder)
-
-  } else if ((existingOrderBookType != incomingOrder.type) && (existingOrderBookPrice != incomingOrder.price)) {
-
-    updatedBook = existingBook.concat(incomingOrder)
-
-  } else if ((existingOrderBookQuantity == incomingOrder.quantity) && (existingOrderBookPrice == incomingOrder.price)) {
-    for (let i = 0; i < existingBook.length; i++) {
-      if (incomingOrder[i] == existingBook[i]) {
-        existingBook.pop(i)
-      }
-      updatedBook = existingBook
-    }
-  } else if ((existingOrderBookType != incomingOrder.Type) && (existingOrderBookQuantity > incomingOrder.quantity) && (existingOrderBookPrice == incomingOrder.price)) {
-    incomingOrder.quantity = (existingOrderBookQuantity - incomingOrder.quantity)
-    incomingOrder.type = ('buy')
+    return updatedBook
+  }
+  if (existingBook[0].quantity === incomingOrder.quantity) {
+    updatedBook = existingBook.filter(order => order.type != 'buy')
+    return updatedBook
+  }
+  if (existingBook[0].quantity > incomingOrder.quantity) {
+    existingBook[0].quantity = existingBook[0].quantity - incomingOrder.quantity
+    updatedBook = existingBook.reverse()
+    return updatedBook
+  }
+  if (existingBook[0].quantity < incomingOrder.quantity && existingBook.length < 3) {
+    existingBook[0].quantity = incomingOrder.quantity - existingBook[0].quantity
+    existingBook[0].type = 'sell'
+    updatedBook = existingBook.reverse()
+    return updatedBook
+  }
+  if (existingBook[0].quantity + existingBook[1].quantity === incomingOrder.quantity) {
+    updatedBook = existingBook.filter(order => order.type != 'buy')
+    return updatedBook
+  }
+  if (existingBook[0].quantity + existingBook[1].quantity > incomingOrder.quantity && existingBook[1].type != incomingOrder.type) {
+    updatedBook = existingBook.filter(order => order.type != 'buy')
+    incomingOrder.quantity = incomingOrder.quantity - existingBook[0].quantity
+    incomingOrder.type = 'buy'
     updatedBook = updatedBook.concat(incomingOrder)
-  } else if ((existingOrderBookType != incomingOrder.Type) && (existingOrderBookQuantity < incomingOrder.quantity) && (existingOrderBookPrice == incomingOrder.price)) {
-    incomingOrder.quantity = (incomingOrder.quantity - existingOrderBookQuantity)
+    return updatedBook
+  }
+  else {
+    updatedBook = existingBook.filter(order => order.type != 'buy')
+    incomingOrder.quantity = incomingOrder.quantity - existingBook[0].quantity - existingBook[1].quantity
     updatedBook = updatedBook.concat(incomingOrder)
-
-  } return updatedBook
+    return updatedBook
+  }
 }
 module.exports = reconcileOrder
